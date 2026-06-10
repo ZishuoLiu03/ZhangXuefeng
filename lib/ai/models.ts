@@ -1,7 +1,7 @@
 export const DEFAULT_CHAT_MODEL = "moonshotai/kimi-k2.5";
 
 export const titleModel = {
-  id: 'gemini-1.5-flash',
+  id: 'Gemini 3.1 Flash Lite',
   name: "Gemini 3.1 Flash Lite",
   provider: "gemini",
   description:"Fast model with tool use",
@@ -25,21 +25,7 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    id: "openai/gpt-oss-20b",
-    name: "GPT OSS 20B",
-    provider: "openai",
-    description: "Compact reasoning model",
-    gatewayOrder: ["groq", "bedrock"],
-    reasoningEffort: "low",
-  },
-  {
-    id: 'gemini-1.5-flash',
-    name: "Gemini 1.5 Flash",
-    provider: "gemini",
-    description:"Fast non-reasoning model with tool use",
-  },
-  {
-    id: 'gemini-1.5-flash',
+    id: 'Gemini 3.1 Flash Lite',
     name: "Gemini 3.1 Flash Lite",
     provider: "gemini",
     description:"Fast model with tool use",
