@@ -220,14 +220,14 @@ export async function POST(request: Request) {
                   "updateDocument",
                   "requestSuggestions",
                 ],
-          providerOptions: {
-            ...(modelConfig?.gatewayOrder && {
-              gateway: { order: modelConfig.gatewayOrder },
-            }),
-            ...(modelConfig?.reasoningEffort && {
-              openai: { reasoningEffort: modelConfig.reasoningEffort },
-            }),
-          },
+          // providerOptions: {
+          //   ...(modelConfig?.gatewayOrder && {
+          //     gateway: { order: modelConfig.gatewayOrder },
+          //   }),
+          //   ...(modelConfig?.reasoningEffort && {
+          //     openai: { reasoningEffort: modelConfig.reasoningEffort },
+          //   }),
+          // },
           tools: {
             getWeather,
             createDocument: createDocument({
@@ -247,10 +247,10 @@ export async function POST(request: Request) {
               modelId: chatModel,
             }),
           },
-          experimental_telemetry: {
-            isEnabled: isProductionEnvironment,
-            functionId: "stream-text",
-          },
+          // experimental_telemetry: {
+          //   isEnabled: isProductionEnvironment,
+          //   functionId: "stream-text",
+          // },
         });
 
         dataStream.merge(
