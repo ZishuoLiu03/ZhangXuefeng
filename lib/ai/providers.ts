@@ -1,6 +1,11 @@
-import { customProvider, gateway } from "ai";
+import { customProvider } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { isTestEnvironment } from "../constants";
 import { titleModel } from "./models";
+
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
 export const myProvider = isTestEnvironment
   ? (() => {
@@ -19,12 +24,16 @@ export function getLanguageModel(modelId: string) {
     return myProvider.languageModel(modelId);
   }
 
-  return gateway.languageModel(modelId);
+  const modelName = modelId.startsWith("google/") ? modelId.slice(7) : modelId;
+  return google(modelName);
 }
 
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  return gateway.languageModel(titleModel.id);
+  
+  const modelId = titleModel.id;
+  const modelName = modelId.startsWith("google/") ? modelId.slice(7) : modelId;
+  return google(modelName);
 }
