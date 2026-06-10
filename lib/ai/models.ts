@@ -1,11 +1,12 @@
-export const DEFAULT_CHAT_MODEL = "moonshotai/kimi-k2.5";
+// models.ts
+
+export const DEFAULT_CHAT_MODEL = "google/gemini-2.5-flash";
 
 export const titleModel = {
-  id: 'Gemini 3.1 Flash Lite',
-  name: "Gemini 3.1 Flash Lite",
+  id: 'google/gemini-2.5-flash',
+  name: "Gemini 2.5 Flash",
   provider: "gemini",
-  description:"Fast model with tool use",
-  gatewayOrder: ["fireworks", "bedrock"],
+  description: "Fast model with tool use",
 };
 
 export type ModelCapabilities = {
@@ -19,104 +20,32 @@ export type ChatModel = {
   name: string;
   provider: string;
   description: string;
-  gatewayOrder?: string[];
-  reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high";
 };
 
+// 💡 确保数组里的 id 和 DEFAULT_CHAT_MODEL 完全一模一样！
 export const chatModels: ChatModel[] = [
   {
-    id: 'Gemini 3.1 Flash Lite',
-    name: "Gemini 3.1 Flash Lite",
+    id: 'google/gemini-2.5-flash',
+    name: "Gemini 2.5 Flash",
     provider: "gemini",
-    description:"Fast model with tool use",
+    description: "速度极快，直连谷歌官方 API",
   }
 ];
 
+// 💡 核心改动：不再请求 https://ai-gateway.vercel.sh，直接写死返回能力！
 export async function getCapabilities(): Promise<
   Record<string, ModelCapabilities>
 > {
-  const results = await Promise.all(
-    chatModels.map(async (model) => {
-      try {
-        const res = await fetch(
-          `https://ai-gateway.vercel.sh/v1/models/${model.id}/endpoints`,
-          { next: { revalidate: 86_400 } }
-        );
-        if (!res.ok) {
-          return [model.id, { tools: false, vision: false, reasoning: false }];
-        }
-
-        const json = await res.json();
-        const endpoints = json.data?.endpoints ?? [];
-        const params = new Set(
-          endpoints.flatMap(
-            (e: { supported_parameters?: string[] }) =>
-              e.supported_parameters ?? []
-          )
-        );
-        const inputModalities = new Set(
-          json.data?.architecture?.input_modalities ?? []
-        );
-
-        return [
-          model.id,
-          {
-            tools: params.has("tools"),
-            vision: inputModalities.has("image"),
-            reasoning: params.has("reasoning"),
-          },
-        ];
-      } catch {
-        return [model.id, { tools: false, vision: false, reasoning: false }];
-      }
-    })
-  );
-
-  return Object.fromEntries(results);
+  return {
+    'google/gemini-2.5-flash': {
+      tools: true,   // 开启工具支持
+      vision: true,  // 开启视觉支持
+      reasoning: false,
+    }
+  };
 }
 
 export const isDemo = process.env.IS_DEMO === "1";
-
-type GatewayModel = {
-  id: string;
-  name: string;
-  type?: string;
-  tags?: string[];
-};
-
-export type GatewayModelWithCapabilities = ChatModel & {
-  capabilities: ModelCapabilities;
-};
-
-export async function getAllGatewayModels(): Promise<
-  GatewayModelWithCapabilities[]
-> {
-  try {
-    const res = await fetch("https://ai-gateway.vercel.sh/v1/models", {
-      next: { revalidate: 86_400 },
-    });
-    if (!res.ok) {
-      return [];
-    }
-
-    const json = await res.json();
-    return (json.data ?? [])
-      .filter((m: GatewayModel) => m.type === "language")
-      .map((m: GatewayModel) => ({
-        id: m.id,
-        name: m.name,
-        provider: m.id.split("/")[0],
-        description: "",
-        capabilities: {
-          tools: m.tags?.includes("tool-use") ?? false,
-          vision: m.tags?.includes("vision") ?? false,
-          reasoning: m.tags?.includes("reasoning") ?? false,
-        },
-      }));
-  } catch {
-    return [];
-  }
-}
 
 export function getActiveModels(): ChatModel[] {
   return chatModels;
