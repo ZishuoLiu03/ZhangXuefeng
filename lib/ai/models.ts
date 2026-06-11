@@ -22,7 +22,6 @@ export type ChatModel = {
   description: string;
 };
 
-// 💡 确保数组里的 id 和 DEFAULT_CHAT_MODEL 完全一模一样！
 export const chatModels: ChatModel[] = [
   {
     id: "google/gemini-2.5-flash",
@@ -30,14 +29,57 @@ export const chatModels: ChatModel[] = [
     provider: "gemini",
     description: "速度极快，直连谷歌官方 API",
   },
+  {
+    id: "google/gemini-2.5-flash-lite",
+    name: "Gemini 2.5 Flash Lite",
+    provider: "gemini",
+    description: "极速轻量模型，超低延迟响应",
+  },
+  {
+    id: "google/gemini-3.1-flash-lite",
+    name: "Gemini 3.1 Flash Lite",
+    provider: "gemini",
+    description: "高性价比次世代轻量大模型",
+  },
+  {
+    id: "google/gemini-3-flash",
+    name: "Gemini 3 Flash",
+    provider: "gemini",
+    description: "全新架构第三代平衡型主力模型",
+  },
+  {
+    id: "google/gemini-3.5-flash",
+    name: "Gemini 3.5 Flash",
+    provider: "gemini",
+    description: "性能强悍，具备极高的推理与响应速度",
+  }
 ];
 
-// 💡 核心改动：不再请求 https://ai-gateway.vercel.sh，直接写死返回能力！
 export function getCapabilities(): Record<string, ModelCapabilities> {
   return {
     "google/gemini-2.5-flash": {
-      tools: true, // 开启工具支持
-      vision: true, // 开启视觉支持
+      tools: true, 
+      vision: true, 
+      reasoning: false,
+    },
+    "google/gemini-2.5-flash-lite": {
+      tools: true, 
+      vision: true, 
+      reasoning: false,
+    },
+    "google/gemini-3.1-flash-lite": {
+      tools: true, 
+      vision: true, 
+      reasoning: false,
+    },
+    "google/gemini-3-flash": {
+      tools: true, 
+      vision: true, 
+      reasoning: false,
+    },
+    "google/gemini-3.5-flash": {
+      tools: true, 
+      vision: true, 
       reasoning: false,
     },
   };
