@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     return new ChatbotError("unauthorized:document").toResponse();
   }
 
-  const documents = await getDocumentsById({ id });
+  const documents = getDocumentsById({ id });
 
   const [document] = documents;
 
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     ).toResponse();
   }
 
-  const documents = await getDocumentsById({ id });
+  const documents = getDocumentsById({ id });
 
   if (documents.length > 0) {
     const [doc] = documents;
@@ -94,11 +94,11 @@ export async function POST(request: Request) {
   }
 
   if (isManualEdit && documents.length > 0) {
-    const result = await updateDocumentContent({ id, content });
+    const result = updateDocumentContent({ id, content });
     return Response.json(result, { status: 200 });
   }
 
-  const document = await saveDocument({
+  const document = saveDocument({
     id,
     content,
     title,
@@ -134,7 +134,7 @@ export async function DELETE(request: Request) {
     return new ChatbotError("unauthorized:document").toResponse();
   }
 
-  const documents = await getDocumentsById({ id });
+  const documents = getDocumentsById({ id });
 
   const [document] = documents;
 
@@ -151,7 +151,7 @@ export async function DELETE(request: Request) {
     ).toResponse();
   }
 
-  const documentsDeleted = await deleteDocumentsByIdAfterTimestamp({
+  const documentsDeleted = deleteDocumentsByIdAfterTimestamp({
     id,
     timestamp: parsedTimestamp,
   });

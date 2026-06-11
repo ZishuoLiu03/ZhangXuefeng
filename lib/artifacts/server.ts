@@ -55,7 +55,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       });
 
       if (args.session?.user?.id) {
-        await saveDocument({
+        saveDocument({
           id: args.id,
           title: args.title,
           content: draftContent,
@@ -76,7 +76,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       });
 
       if (args.session?.user?.id) {
-        await saveDocument({
+        saveDocument({
           id: args.document.id,
           title: args.document.title,
           content: draftContent,

@@ -29,7 +29,7 @@ export const editDocument = ({ session, dataStream }: EditDocumentProps) =>
         ),
     }),
     execute: async ({ id, old_string, new_string, replace_all }) => {
-      const document = await getDocumentById({ id });
+      const document = getDocumentById({ id });
 
       if (!document) {
         return { error: "Document not found" };
@@ -51,7 +51,7 @@ export const editDocument = ({ session, dataStream }: EditDocumentProps) =>
         ? document.content.replaceAll(old_string, new_string)
         : document.content.replace(old_string, new_string);
 
-      await saveDocument({
+      saveDocument({
         id: document.id,
         title: document.title,
         kind: document.kind,

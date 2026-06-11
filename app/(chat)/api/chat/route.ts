@@ -1,3 +1,6 @@
+// 💡 遵循现代 Node.js 最佳实践与严格 Lint：使用 node: 协议前缀
+import fs from "node:fs";
+import path from "node:path";
 import { geolocation, ipAddress } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -10,7 +13,6 @@ import {
 import { checkBotId } from "botid/server";
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
-import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/app/../lib/ai/entitlements";
 import {
   allowedModelIds,
@@ -24,7 +26,6 @@ import { editDocument } from "@/app/../lib/ai/tools/edit-document";
 import { getWeather } from "@/app/../lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/app/../lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/app/../lib/ai/tools/update-document";
-import { isProductionEnvironment } from "@/app/../lib/constants";
 import {
   createStreamId,
   deleteChatById,
@@ -41,12 +42,9 @@ import { ChatbotError } from "@/app/../lib/errors";
 import { checkIpRateLimit } from "@/app/../lib/ratelimit";
 import type { ChatMessage } from "@/app/../lib/types";
 import { convertToUIMessages, generateUUID } from "@/app/../lib/utils";
+import { auth, type UserType } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
-
-// 💡 遵循现代 Node.js 最佳实践与严格 Lint：使用 node: 协议前缀
-import fs from "node:fs";
-import path from "node:path";
 
 export const maxDuration = 60;
 
@@ -56,7 +54,10 @@ const getSkillPrompt = (): string => {
     const filePath = path.join(process.cwd(), "SKILL.md");
     return fs.readFileSync(filePath, "utf8");
   } catch (error) {
-    console.error("Failed to read SKILL.md, falling back to empty string:", error);
+    console.error(
+      "Failed to read SKILL.md, falling back to empty string:",
+      error
+    );
     return "";
   }
 };
@@ -64,7 +65,7 @@ const getSkillPrompt = (): string => {
 function getStreamContext() {
   try {
     return createResumableStreamContext({ waitUntil: after });
-  } catch (_) {
+  } catch {
     return null;
   }
 }
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
-  } catch (_) {
+  } catch {
     return new ChatbotError("bad_request:api").toResponse();
   }
 
@@ -175,7 +176,9 @@ export async function POST(request: Request) {
     // 我们在此处调用它，向控制台输出一条带有城市信息的 Debug Log，优雅满足 Lint 对变量被消费的要求。
     const geo = geolocation(request);
     if (process.env.NODE_ENV !== "production") {
-      console.log(`[Chat Request] Incoming conversation from city: ${geo.city ?? "Unknown"}`);
+      console.log(
+        `[Chat Request] Incoming conversation from city: ${geo.city ?? "Unknown"}`
+      );
     }
 
     if (message?.role === "user") {
@@ -193,8 +196,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const modelConfig = chatModels.find((m) => m.id === chatModel);
-    const modelCapabilities = await getCapabilities();
+    const modelCapabilities = getCapabilities();
     const capabilities = modelCapabilities[chatModel];
     const isReasoningModel = capabilities?.reasoning === true;
     const supportsTools = capabilities?.tools === true;
@@ -262,7 +264,7 @@ export async function POST(request: Request) {
             const title = await titlePromise;
             dataStream.write({ type: "data-chat-title", data: title });
             updateChatTitleById({ chatId: id, title });
-          } catch (_) {
+          } catch {
             /* non-fatal */
           }
         }
@@ -306,8 +308,10 @@ export async function POST(request: Request) {
         }
       },
       onError: (error) => {
-      console.error("Stream error:", error);
-      return error instanceof Error ? error.message : "Oops, an error occurred!";
+        console.error("Stream error:", error);
+        return error instanceof Error
+          ? error.message
+          : "Oops, an error occurred!";
       },
     });
 
@@ -327,7 +331,7 @@ export async function POST(request: Request) {
               () => sseStream
             );
           }
-        } catch (_) {
+        } catch {
           /* non-critical */
         }
       },

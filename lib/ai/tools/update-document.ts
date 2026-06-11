@@ -27,7 +27,7 @@ export const updateDocument = ({
         .describe("The description of changes that need to be made"),
     }),
     execute: async ({ id, description }) => {
-      const document = await getDocumentById({ id });
+      const document = getDocumentById({ id });
 
       if (!document) {
         return {

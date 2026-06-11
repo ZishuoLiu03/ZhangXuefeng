@@ -29,7 +29,7 @@ export const requestSuggestions = ({
         ),
     }),
     execute: async ({ documentId }) => {
-      const document = await getDocumentById({ id: documentId });
+      const document = getDocumentById({ id: documentId });
 
       if (!document?.content) {
         return {
@@ -101,7 +101,7 @@ export const requestSuggestions = ({
       if (session.user?.id) {
         const userId = session.user.id;
 
-        await saveSuggestions({
+        saveSuggestions({
           suggestions: suggestions.map((suggestion) => ({
             ...suggestion,
             userId,

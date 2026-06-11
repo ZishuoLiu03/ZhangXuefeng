@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     return new ChatbotError("unauthorized:suggestions").toResponse();
   }
 
-  const suggestions = await getSuggestionsByDocumentId({
+  const suggestions = getSuggestionsByDocumentId({
     documentId,
   });
 

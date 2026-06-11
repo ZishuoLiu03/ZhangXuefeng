@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     return new ChatbotError("unauthorized:chat").toResponse();
   }
 
-  const chats = await getChatsByUserId({
+  const chats = getChatsByUserId({
     id: session.user.id,
     limit,
     startingAfter,
@@ -43,7 +43,7 @@ export async function DELETE() {
     return new ChatbotError("unauthorized:chat").toResponse();
   }
 
-  const result = await deleteAllChatsByUserId({ userId: session.user.id });
+  const result = deleteAllChatsByUserId({ userId: session.user.id });
 
   return Response.json(result, { status: 200 });
 }

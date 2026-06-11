@@ -3,7 +3,7 @@
 export const DEFAULT_CHAT_MODEL = "google/gemini-2.5-flash";
 
 export const titleModel = {
-  id: 'google/gemini-2.5-flash',
+  id: "google/gemini-2.5-flash",
   name: "Gemini 2.5 Flash",
   provider: "gemini",
   description: "Fast model with tool use",
@@ -25,23 +25,21 @@ export type ChatModel = {
 // 💡 确保数组里的 id 和 DEFAULT_CHAT_MODEL 完全一模一样！
 export const chatModels: ChatModel[] = [
   {
-    id: 'google/gemini-2.5-flash',
+    id: "google/gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
     provider: "gemini",
     description: "速度极快，直连谷歌官方 API",
-  }
+  },
 ];
 
 // 💡 核心改动：不再请求 https://ai-gateway.vercel.sh，直接写死返回能力！
-export async function getCapabilities(): Promise<
-  Record<string, ModelCapabilities>
-> {
+export function getCapabilities(): Record<string, ModelCapabilities> {
   return {
-    'google/gemini-2.5-flash': {
-      tools: true,   // 开启工具支持
-      vision: true,  // 开启视觉支持
+    "google/gemini-2.5-flash": {
+      tools: true, // 开启工具支持
+      vision: true, // 开启视觉支持
       reasoning: false,
-    }
+    },
   };
 }
 

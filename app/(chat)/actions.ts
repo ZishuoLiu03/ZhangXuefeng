@@ -4,7 +4,6 @@ import { generateText, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
-import { titleModel } from "@/lib/ai/models";
 import { titlePrompt } from "@/lib/ai/prompts";
 import { getTitleModel } from "@/lib/ai/providers";
 import {
@@ -42,17 +41,17 @@ export async function deleteTrailingMessages({ id }: { id: string }) {
     throw new Error("Unauthorized");
   }
 
-  const [message] = await getMessageById({ id });
+  const [message] = getMessageById({ id });
   if (!message) {
     throw new Error("Message not found");
   }
 
-  const chat = await getChatById({ id: message.chatId });
+  const chat = getChatById({ id: message.chatId });
   if (!chat || chat.userId !== session.user.id) {
     throw new Error("Unauthorized");
   }
 
-  await deleteMessagesByChatIdAfterTimestamp({
+  deleteMessagesByChatIdAfterTimestamp({
     chatId: message.chatId,
     timestamp: message.createdAt,
   });
@@ -75,5 +74,5 @@ export async function updateChatVisibility({
     throw new Error("Unauthorized");
   }
 
-  await updateChatVisibilityById({ chatId, visibility });
+  updateChatVisibilityById({ chatId, visibility });
 }

@@ -4,14 +4,14 @@ import type { ArtifactKind } from "@/components/chat/artifact";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { ChatbotError } from "../errors";
 import { generateUUID } from "../utils";
-import {
-  type Chat,
-  type DBMessage,
-  type Document,
-  type Suggestion,
-  type Stream,
-  type User,
-  type Vote,
+import type {
+  Chat,
+  DBMessage,
+  Document,
+  Stream,
+  Suggestion,
+  User,
+  Vote,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -24,10 +24,10 @@ const documentsStore: Document[] = [];
 const suggestionsStore: Suggestion[] = [];
 const streamsStore: Stream[] = [];
 
-export async function getUser(email: string): Promise<User[]> {
+export function getUser(email: string): User[] {
   try {
     return usersStore.filter((u) => u.email === email);
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get user by email"
@@ -35,7 +35,7 @@ export async function getUser(email: string): Promise<User[]> {
   }
 }
 
-export async function createUser(email: string, password: string) {
+export function createUser(email: string, password: string) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
@@ -52,12 +52,12 @@ export async function createUser(email: string, password: string) {
     };
     usersStore.push(newUser);
     return [newUser];
-  } catch (_error) {
+  } catch {
     throw new ChatbotError("bad_request:database", "Failed to create user");
   }
 }
 
-export async function createGuestUser() {
+export function createGuestUser() {
   const email = `guest-${Date.now()}`;
   const password = generateHashedPassword(generateUUID());
 
@@ -74,11 +74,13 @@ export async function createGuestUser() {
       updatedAt: new Date(),
     };
     usersStore.push(guest);
-    return [{
-      id: guest.id,
-      email: guest.email,
-    }];
-  } catch (_error) {
+    return [
+      {
+        id: guest.id,
+        email: guest.email,
+      },
+    ];
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to create guest user"
@@ -86,7 +88,7 @@ export async function createGuestUser() {
   }
 }
 
-export async function saveChat({
+export function saveChat({
   id,
   userId,
   title,
@@ -107,12 +109,12 @@ export async function saveChat({
     };
     chatsStore.push(newChat);
     return [newChat];
-  } catch (_error) {
+  } catch {
     throw new ChatbotError("bad_request:database", "Failed to save chat");
   }
 }
 
-export async function deleteChatById({ id }: { id: string }) {
+export function deleteChatById({ id }: { id: string }) {
   try {
     // Delete related votes
     const remainingVotes = votesStore.filter((v) => v.chatId !== id);
@@ -135,7 +137,7 @@ export async function deleteChatById({ id }: { id: string }) {
       return deletedChat;
     }
     return null;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to delete chat by id"
@@ -143,7 +145,7 @@ export async function deleteChatById({ id }: { id: string }) {
   }
 }
 
-export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
+export function deleteAllChatsByUserId({ userId }: { userId: string }) {
   try {
     const userChats = chatsStore.filter((c) => c.userId === userId);
 
@@ -154,17 +156,23 @@ export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
     const chatIds = userChats.map((c) => c.id);
 
     // Delete related votes
-    const remainingVotes = votesStore.filter((v) => !chatIds.includes(v.chatId));
+    const remainingVotes = votesStore.filter(
+      (v) => !chatIds.includes(v.chatId)
+    );
     votesStore.length = 0;
     votesStore.push(...remainingVotes);
 
     // Delete related messages
-    const remainingMessages = messagesStore.filter((m) => !chatIds.includes(m.chatId));
+    const remainingMessages = messagesStore.filter(
+      (m) => !chatIds.includes(m.chatId)
+    );
     messagesStore.length = 0;
     messagesStore.push(...remainingMessages);
 
     // Delete related streams
-    const remainingStreams = streamsStore.filter((s) => !chatIds.includes(s.chatId));
+    const remainingStreams = streamsStore.filter(
+      (s) => !chatIds.includes(s.chatId)
+    );
     streamsStore.length = 0;
     streamsStore.push(...remainingStreams);
 
@@ -174,7 +182,7 @@ export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
     chatsStore.push(...remainingChats);
 
     return { deletedCount: userChats.length };
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to delete all chats by user id"
@@ -182,7 +190,7 @@ export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
   }
 }
 
-export async function getChatsByUserId({
+export function getChatsByUserId({
   id,
   limit,
   startingAfter,
@@ -195,8 +203,8 @@ export async function getChatsByUserId({
 }) {
   try {
     const extendedLimit = limit + 1;
-    let userChats = chatsStore.filter((c) => c.userId === id);
-    
+    const userChats = chatsStore.filter((c) => c.userId === id);
+
     // Order by createdAt desc
     userChats.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
@@ -210,7 +218,9 @@ export async function getChatsByUserId({
           `Chat with id ${startingAfter} not found`
         );
       }
-      filteredChats = userChats.filter((c) => c.createdAt.getTime() > selectedChat.createdAt.getTime());
+      filteredChats = userChats.filter(
+        (c) => c.createdAt.getTime() > selectedChat.createdAt.getTime()
+      );
     } else if (endingBefore) {
       const selectedChat = chatsStore.find((c) => c.id === endingBefore);
       if (!selectedChat) {
@@ -219,7 +229,9 @@ export async function getChatsByUserId({
           `Chat with id ${endingBefore} not found`
         );
       }
-      filteredChats = userChats.filter((c) => c.createdAt.getTime() < selectedChat.createdAt.getTime());
+      filteredChats = userChats.filter(
+        (c) => c.createdAt.getTime() < selectedChat.createdAt.getTime()
+      );
     } else {
       filteredChats = userChats;
     }
@@ -231,9 +243,9 @@ export async function getChatsByUserId({
       chats: hasMore ? slicedChats.slice(0, limit) : slicedChats,
       hasMore,
     };
-  } catch (_error) {
-    if (_error instanceof ChatbotError) {
-      throw _error;
+  } catch (error) {
+    if (error instanceof ChatbotError) {
+      throw error;
     }
     throw new ChatbotError(
       "bad_request:database",
@@ -242,28 +254,28 @@ export async function getChatsByUserId({
   }
 }
 
-export async function getChatById({ id }: { id: string }) {
+export function getChatById({ id }: { id: string }) {
   try {
     const selectedChat = chatsStore.find((c) => c.id === id);
     if (!selectedChat) {
       return null;
     }
     return selectedChat;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError("bad_request:database", "Failed to get chat by id");
   }
 }
 
-export async function saveMessages({ messages }: { messages: DBMessage[] }) {
+export function saveMessages({ messages }: { messages: DBMessage[] }) {
   try {
     messagesStore.push(...messages);
     return messages;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError("bad_request:database", "Failed to save messages");
   }
 }
 
-export async function updateMessage({
+export function updateMessage({
   id,
   parts,
 }: {
@@ -280,21 +292,21 @@ export async function updateMessage({
       parts,
     };
     return [messagesStore[existingMsgIdx]];
-  } catch (_error) {
-    if (_error instanceof ChatbotError) {
-      throw _error;
+  } catch (error) {
+    if (error instanceof ChatbotError) {
+      throw error;
     }
     throw new ChatbotError("bad_request:database", "Failed to update message");
   }
 }
 
-export async function getMessagesByChatId({ id }: { id: string }) {
+export function getMessagesByChatId({ id }: { id: string }) {
   try {
     const msgs = messagesStore.filter((m) => m.chatId === id);
     // Sort by createdAt asc
     msgs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     return msgs;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get messages by chat id"
@@ -302,7 +314,7 @@ export async function getMessagesByChatId({ id }: { id: string }) {
   }
 }
 
-export async function voteMessage({
+export function voteMessage({
   chatId,
   messageId,
   type,
@@ -328,15 +340,15 @@ export async function voteMessage({
     };
     votesStore.push(newVote);
     return [newVote];
-  } catch (_error) {
+  } catch {
     throw new ChatbotError("bad_request:database", "Failed to vote message");
   }
 }
 
-export async function getVotesByChatId({ id }: { id: string }) {
+export function getVotesByChatId({ id }: { id: string }) {
   try {
     return votesStore.filter((v) => v.chatId === id);
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get votes by chat id"
@@ -344,7 +356,7 @@ export async function getVotesByChatId({ id }: { id: string }) {
   }
 }
 
-export async function saveDocument({
+export function saveDocument({
   id,
   title,
   kind,
@@ -368,12 +380,12 @@ export async function saveDocument({
     };
     documentsStore.push(newDoc);
     return [newDoc];
-  } catch (_error) {
+  } catch {
     throw new ChatbotError("bad_request:database", "Failed to save document");
   }
 }
 
-export async function updateDocumentContent({
+export function updateDocumentContent({
   id,
   content,
 }: {
@@ -392,9 +404,9 @@ export async function updateDocumentContent({
 
     latest.content = content;
     return [latest];
-  } catch (_error) {
-    if (_error instanceof ChatbotError) {
-      throw _error;
+  } catch (error) {
+    if (error instanceof ChatbotError) {
+      throw error;
     }
     throw new ChatbotError(
       "bad_request:database",
@@ -403,13 +415,13 @@ export async function updateDocumentContent({
   }
 }
 
-export async function getDocumentsById({ id }: { id: string }) {
+export function getDocumentsById({ id }: { id: string }) {
   try {
     const docs = documentsStore.filter((d) => d.id === id);
     // Sort asc by createdAt
     docs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     return docs;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get documents by id"
@@ -417,13 +429,13 @@ export async function getDocumentsById({ id }: { id: string }) {
   }
 }
 
-export async function getDocumentById({ id }: { id: string }) {
+export function getDocumentById({ id }: { id: string }) {
   try {
     const docs = documentsStore.filter((d) => d.id === id);
     // Sort desc by createdAt
     docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return docs[0] || null;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get document by id"
@@ -431,7 +443,7 @@ export async function getDocumentById({ id }: { id: string }) {
   }
 }
 
-export async function deleteDocumentsByIdAfterTimestamp({
+export function deleteDocumentsByIdAfterTimestamp({
   id,
   timestamp,
 }: {
@@ -441,7 +453,11 @@ export async function deleteDocumentsByIdAfterTimestamp({
   try {
     // Delete suggestions
     const remainingSuggestions = suggestionsStore.filter(
-      (s) => !(s.documentId === id && s.documentCreatedAt.getTime() > timestamp.getTime())
+      (s) =>
+        !(
+          s.documentId === id &&
+          s.documentCreatedAt.getTime() > timestamp.getTime()
+        )
     );
     suggestionsStore.length = 0;
     suggestionsStore.push(...remainingSuggestions);
@@ -459,7 +475,7 @@ export async function deleteDocumentsByIdAfterTimestamp({
     documentsStore.push(...remainingDocs);
 
     return docsToDelete;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to delete documents by id after timestamp"
@@ -467,7 +483,7 @@ export async function deleteDocumentsByIdAfterTimestamp({
   }
 }
 
-export async function saveSuggestions({
+export function saveSuggestions({
   suggestions,
 }: {
   suggestions: Suggestion[];
@@ -475,7 +491,7 @@ export async function saveSuggestions({
   try {
     suggestionsStore.push(...suggestions);
     return suggestions;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to save suggestions"
@@ -483,14 +499,14 @@ export async function saveSuggestions({
   }
 }
 
-export async function getSuggestionsByDocumentId({
+export function getSuggestionsByDocumentId({
   documentId,
 }: {
   documentId: string;
 }) {
   try {
     return suggestionsStore.filter((s) => s.documentId === documentId);
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get suggestions by document id"
@@ -498,10 +514,10 @@ export async function getSuggestionsByDocumentId({
   }
 }
 
-export async function getMessageById({ id }: { id: string }) {
+export function getMessageById({ id }: { id: string }) {
   try {
     return messagesStore.filter((m) => m.id === id);
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get message by id"
@@ -509,7 +525,7 @@ export async function getMessageById({ id }: { id: string }) {
   }
 }
 
-export async function deleteMessagesByChatIdAfterTimestamp({
+export function deleteMessagesByChatIdAfterTimestamp({
   chatId,
   timestamp,
 }: {
@@ -540,7 +556,7 @@ export async function deleteMessagesByChatIdAfterTimestamp({
 
       return messagesToDelete;
     }
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to delete messages by chat id after timestamp"
@@ -548,7 +564,7 @@ export async function deleteMessagesByChatIdAfterTimestamp({
   }
 }
 
-export async function updateChatVisibilityById({
+export function updateChatVisibilityById({
   chatId,
   visibility,
 }: {
@@ -562,9 +578,9 @@ export async function updateChatVisibilityById({
     }
     selectedChat.visibility = visibility;
     return [selectedChat];
-  } catch (_error) {
-    if (_error instanceof ChatbotError) {
-      throw _error;
+  } catch (error) {
+    if (error instanceof ChatbotError) {
+      throw error;
     }
     throw new ChatbotError(
       "bad_request:database",
@@ -573,7 +589,7 @@ export async function updateChatVisibilityById({
   }
 }
 
-export async function updateChatTitleById({
+export function updateChatTitleById({
   chatId,
   title,
 }: {
@@ -586,12 +602,12 @@ export async function updateChatTitleById({
       selectedChat.title = title;
       return [selectedChat];
     }
-  } catch (_error) {
+  } catch {
     return;
   }
 }
 
-export async function getMessageCountByUserId({
+export function getMessageCountByUserId({
   id,
   differenceInHours,
 }: {
@@ -603,7 +619,9 @@ export async function getMessageCountByUserId({
       Date.now() - differenceInHours * 60 * 60 * 1000
     );
 
-    const userChatIds = chatsStore.filter((c) => c.userId === id).map((c) => c.id);
+    const userChatIds = chatsStore
+      .filter((c) => c.userId === id)
+      .map((c) => c.id);
 
     const count = messagesStore.filter(
       (m) =>
@@ -613,7 +631,7 @@ export async function getMessageCountByUserId({
     ).length;
 
     return count;
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get message count by user id"
@@ -621,7 +639,7 @@ export async function getMessageCountByUserId({
   }
 }
 
-export async function createStreamId({
+export function createStreamId({
   streamId,
   chatId,
 }: {
@@ -635,7 +653,7 @@ export async function createStreamId({
       createdAt: new Date(),
     };
     streamsStore.push(newStream);
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to create stream id"
@@ -643,12 +661,12 @@ export async function createStreamId({
   }
 }
 
-export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
+export function getStreamIdsByChatId({ chatId }: { chatId: string }) {
   try {
     const streams = streamsStore.filter((s) => s.chatId === chatId);
     streams.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     return streams.map(({ id }) => id);
-  } catch (_error) {
+  } catch {
     throw new ChatbotError(
       "bad_request:database",
       "Failed to get stream ids by chat id"
